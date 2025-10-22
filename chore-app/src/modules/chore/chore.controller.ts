@@ -9,12 +9,15 @@ import {
   UseGuards,
   Request,
   Put,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ChoreService } from './chore.service';
 import { CreateChoreDto } from './dto/create-chore.dto';
 import { UpdateChoreDto } from './dto/update-chore.dto';
 import { ChangeStatusDto } from './dto/change-status.dto';
-import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { AssignKidsDto } from './dto/assign-kids.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -63,12 +66,31 @@ export class ChoreController {
 
   // Kid uploads photo proof
   @Put(':id/photo')
-  uploadPhoto(
+  @UseInterceptors(FileInterceptor('photo'))
+  async uploadPhoto(
     @Param('id') id: string,
-    @Body() uploadPhotoDto: UploadPhotoDto,
+    @UploadedFile() file: Express.Multer.File,
     @Request() req,
   ) {
-    return this.choreService.uploadPhoto(id, uploadPhotoDto, req.user.sub);
+    if (!file) {
+      throw new BadRequestException('Photo file is required');
+    }
+
+    // Validate file type (images only)
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic'];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Invalid file type. Only JPEG, PNG, WebP, and HEIC images are allowed.',
+      );
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      throw new BadRequestException('File size exceeds 10MB limit');
+    }
+
+    return this.choreService.uploadPhoto(id, file, req.user.sub);
   }
 
   // Parent assigns kids to chore

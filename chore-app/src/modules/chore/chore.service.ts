@@ -12,8 +12,8 @@ import { User } from '../../database/entities/user.entity';
 import { CreateChoreDto } from './dto/create-chore.dto';
 import { UpdateChoreDto } from './dto/update-chore.dto';
 import { ChangeStatusDto } from './dto/change-status.dto';
-import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { AssignKidsDto } from './dto/assign-kids.dto';
+import { S3Service } from '../s3/s3.service';
 
 @Injectable()
 export class ChoreService {
@@ -24,6 +24,7 @@ export class ChoreService {
     private kidsRepository: Repository<Kids>,
     @Inject('USER_REPOSITORY')
     private userRepository: Repository<User>,
+    private s3Service: S3Service,
     @Inject('POINTS_SERVICE')
     private pointsService?: any, // Optional - injected when PointsModule is available
   ) {}
@@ -304,7 +305,7 @@ export class ChoreService {
   }
 
   // Upload photo (kid uploads proof)
-  async uploadPhoto(id: string, uploadPhotoDto: UploadPhotoDto, userId: string): Promise<Chore> {
+  async uploadPhoto(id: string, file: Express.Multer.File, userId: string): Promise<Chore> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     
     if (!user || user.userType !== 'child') {
@@ -328,7 +329,20 @@ export class ChoreService {
       throw new NotFoundException('Chore not found or not assigned to you');
     }
 
-    chore.photo = uploadPhotoDto.photo;
+    // Delete old photo from S3 if exists
+    if (chore.photo && this.s3Service.isConfigured()) {
+      try {
+        await this.s3Service.deleteFile(chore.photo);
+      } catch (error) {
+        // Log error but don't fail the upload
+        console.error('Failed to delete old photo from S3:', error);
+      }
+    }
+
+    // Upload new photo to S3
+    const photoUrl = await this.s3Service.uploadFile(file, 'chore-photos');
+    chore.photo = photoUrl;
+    
     return this.choreRepository.save(chore);
   }
 

@@ -13,9 +13,11 @@ A comprehensive NestJS-based family chore management application with an integra
 ### 📋 Chore Management
 - Create, update, and delete chores
 - Assign chores to multiple kids
-- Photo upload for completed chores
+- **AWS S3 photo upload** for completed chores
 - Status tracking: pending → in_progress → completed → approved/rejected
 - Points system for approved chores
+- Automatic file validation (type & size)
+- Cloud storage for scalability
 
 ### 🎯 Points System
 - Automatic point awards for approved chores
@@ -97,7 +99,15 @@ DB_DATABASE=chore_app
 
 # App URL
 APP_URL=http://localhost:3000
+
+# AWS S3 (for photo uploads)
+AWS_S3_REGION=us-east-1
+AWS_S3_BUCKET=your-bucket-name
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
 ```
+
+**Note:** S3 configuration is optional but required for photo uploads. See [S3_SETUP_QUICK_REFERENCE.md](S3_SETUP_QUICK_REFERENCE.md) for setup instructions.
 
 ## 📚 API Documentation
 
@@ -174,6 +184,8 @@ For detailed API documentation, see:
 - [CHORE_MODULE_GUIDE.md](CHORE_MODULE_GUIDE.md) - Chore management guide
 - [POINTS_SYSTEM_GUIDE.md](POINTS_SYSTEM_GUIDE.md) - Points system guide
 - [REWARDS_MODULE_GUIDE.md](REWARDS_MODULE_GUIDE.md) - Rewards system guide
+- [S3_PHOTO_UPLOAD_GUIDE.md](S3_PHOTO_UPLOAD_GUIDE.md) - AWS S3 photo upload guide
+- [S3_SETUP_QUICK_REFERENCE.md](S3_SETUP_QUICK_REFERENCE.md) - Quick S3 setup
 
 ## 🏗️ Project Structure
 
@@ -296,6 +308,13 @@ For detailed guides, see:
 - [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Project overview
 
 ## 🚀 Recent Updates
+
+### v1.2.0 - AWS S3 Photo Upload
+- 📸 AWS S3 integration for chore photos
+- ☁️ Cloud storage instead of database
+- 🔒 Secure file upload with validation
+- 🗑️ Automatic old photo cleanup
+- 📏 File size & type validation (max 10MB)
 
 ### v1.1.0 - Rewards System
 - ✨ Added Rewards Module
